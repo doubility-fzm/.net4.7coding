@@ -36,16 +36,16 @@ namespace XBIM_Module
         private readonly IfcStore _model;//using external Alignment model as refenrence
 
         //Constructors
-        Bridge_Construction() : this("Bridge_Alignment.ifc", "Test_Bridge.ifc")
+        Bridge_Construction() : this("../../TestFiles/alignment.ifc", "../../TestFiles/aligment&construction.ifc")
         {
             //empty
         }
 
-        public Bridge_Construction(string inputPath, string outputPath)
+        public Bridge_Construction(string inputPath,string outputPath)
         {
             if (!File.Exists(inputPath))
             {
-                var bridgeconstruction = new Create_Alignment(inputPath);
+                var bridgeconstruction = new Create_Alignment(inputPath) { IsStraight = true };
                 bridgeconstruction.Create();
             }
             //use readonly IfcStore _model(created or existed)
@@ -137,14 +137,16 @@ namespace XBIM_Module
             }
         }
         #endregion
-#region using all of functions in this class to generate the bridge
-        private IfcCurve[] BridgeConstructionCurve { get; set; }
+#region using all of functions in this class to generate the bridge     
+
+
         public void build()
         {
             var para = new Technical_Demand();
             var cross = new CrossSection();
+            var BridgeConstructionCurve = new List<IfcCurve>();
             cross.calculate_girder_parament(ref para);
-            const int START = 0, END = 15000;
+            const int START = 30000, END = 60000;
 
             InitWCS();
             var site = _model.Instances.OfType<IfcSite>().FirstOrDefault();
@@ -156,8 +158,8 @@ namespace XBIM_Module
 
             for(int girdercount=0;girdercount<cross.lateral_offset_dis.Length;girdercount++)
             {
-                Set_Bridge_Construction_Parameter(START, END, cross.lateral_offset_dis[girdercount], cross.vertical_offset_dis);
-                BridgeConstructionCurve[girdercount] = AddBridgeAlignment(alignment);
+                Set_Bridge_Construction_Parameter(START, END, cross.vertical_offset_dis*-1, cross.lateral_offset_dis[girdercount]*1000);
+                BridgeConstructionCurve.Add(AddBridgeAlignment(alignment));
             }
 
             _model.SaveAs(_outputPath, StorageType.Ifc);
